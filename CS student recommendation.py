@@ -34,44 +34,60 @@ for i in range(len(takenCourses)):
     else:
         print("and " + takenCourses[i] + ".")
 
-# def checkPrereq(dataFrame, courseSet):
-
+def checkPrereq(preReq, courseSet):
+    allConditions = preReq.split(";")
+    for condition in allConditions:
+        flag = False
+        allCourses = condition.split("/")
+        for course in allCourses:
+            if course in courseSet:
+                flag = True
+                break
+        if not flag:
+            return False
+    return True
 
 
 def generateCore(dataFrame, courseSet, res):
     coreFrame = dataFrame[dataFrame['Category'] == 'Core']
     count = 0
-    # for index, row in coreFrame.iterrows():
-    #     courseNumber = row['Course']
-    #     if courseNumber not in courseSet:
-    #         res.append(courseNumber)
-    #         count += 1
-    #         if count == 3:
-    #             return
-
-def generateSupple(dataFrame, courseSet, res):
-    suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
-    count = 0
-    for index, row in suppleFrame.iterrows():
+    for index, row in coreFrame.iterrows():
+        preReq = row['Prerequisite']
         courseNumber = row['Course']
-        if courseNumber not in courseSet:
+        # unit = row['Unit']
+        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
             res.append(courseNumber)
             count += 1
-            if count == 2:
+            if count == 3:
                 return
+        
+
+# def generateSupple(dataFrame, res):
+#     suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
+#     count = 0
+#     for index, row in suppleFrame.iterrows():
+#         courseNumber = row['Course']
+#         if courseNumber not in courseSet:
+#             res.append(courseNumber)
+#             count += 1
+#             if count == 2:
+#                 return
 
     
 
 dataFrame2 = readCSV("CS catalog.csv")
+dataFrame2 = dataFrame2.sort_values(['Department', 'Category', 'Course'])
 # dataFrame2 = readCSV("catalog.csv")
 majorFrame = dataFrame2[(dataFrame2['Department'] == studentMajor) & (~dataFrame2['Course'].isin(takenCourses))]
+
 # print(dataFrame2)
-print(majorFrame)
+# print(majorFrame)
 
-
-# finalResult = []
-# generateCore(majorFrame, courseSet, finalResult)
-# generateSupple(majorFrame, courseSet, finalResult)
-# print(finalResult)
+unitLimit = 54
+unitCount = 0
+finalResult = []
+generateCore(majorFrame, courseSet, finalResult)
+# generateSupple(majorFrame, finalResult)
+print(finalResult)
 
 

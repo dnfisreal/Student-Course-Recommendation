@@ -62,16 +62,17 @@ def generateCore(dataFrame, courseSet, res):
                 return
         
 
-# def generateSupple(dataFrame, res):
-#     suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
-#     count = 0
-#     for index, row in suppleFrame.iterrows():
-#         courseNumber = row['Course']
-#         if courseNumber not in courseSet:
-#             res.append(courseNumber)
-#             count += 1
-#             if count == 2:
-#                 return
+def generateSupple(dataFrame, courseSet, res):
+    suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
+    count = 0
+    for index, row in suppleFrame.iterrows():
+        preReq = row['Prerequisite']
+        courseNumber = row['Course']
+        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
+            res.append(courseNumber)
+            count += 1
+            if count == 2:
+                return
 
     
 
@@ -87,7 +88,7 @@ unitLimit = 54
 unitCount = 0
 finalResult = []
 generateCore(majorFrame, courseSet, finalResult)
-# generateSupple(majorFrame, finalResult)
+generateSupple(majorFrame, courseSet, finalResult)
 print(finalResult)
 
 

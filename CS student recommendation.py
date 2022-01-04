@@ -54,7 +54,7 @@ def generateCore(dataFrame, courseSet, res):
     for index, row in coreFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
-        # unit = row['Unit']
+        unit = row['Unit']
         if (preReq == 'None' or checkPrereq(preReq, courseSet)):
             res.append(courseNumber)
             count += 1
@@ -74,7 +74,19 @@ def generateSupple(dataFrame, courseSet, res):
             if count == 2:
                 return
 
-    
+
+def generateGenEd(dataFrame, courseSet, res):
+    genEdFrame = dataFrame[dataFrame['Category'] == 'General Education']
+    count = 0
+    for index, row in genEdFrame.iterrows():
+        preReq = row['Prerequisite']
+        courseNumber = row['Course']
+        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
+            res.append(courseNumber)
+            count += 1
+            if count == 2:
+                return
+
 
 dataFrame2 = readCSV("CS catalog.csv")
 dataFrame2 = dataFrame2.sort_values(['Department', 'Category', 'Course'])
@@ -89,6 +101,7 @@ unitCount = 0
 finalResult = []
 generateCore(majorFrame, courseSet, finalResult)
 generateSupple(majorFrame, courseSet, finalResult)
+generateGenEd(majorFrame, courseSet, finalResult)
 print(finalResult)
 
 

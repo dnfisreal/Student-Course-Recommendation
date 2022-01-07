@@ -48,60 +48,102 @@ def checkPrereq(preReq, courseSet):
     return True
 
 
-def generateCore(dataFrame, courseSet, res):
+def generateCore(dataFrame, courseSet, unitCount, res, buf):
     coreFrame = dataFrame[dataFrame['Category'] == 'Core']
-    count = 0
+    coreUnits = 0
     for index, row in coreFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
         unit = row['Unit']
         if (preReq == 'None' or checkPrereq(preReq, courseSet)):
-            res.append(courseNumber)
-            count += 1
-            if count == 3:
-                return
+            if (coreUnits + unit <= 31):
+                unitCount += unit
+                coreUnits += unit
+                res.append(courseNumber)
+                if (len(res) == 3):
+                    return unitCount
+            else:
+                buf.append((courseNumber, unit))
+                if (len(buf) == 2):
+                    return unitCount
+    return unitCount
         
 
-def generateSupple(dataFrame, courseSet, res):
+def generateSupple(dataFrame, courseSet, unitCount, res, buf):
     suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
-    count = 0
+    suppleUnits = 0
     for index, row in suppleFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
+        unit = row['Unit']
         if (preReq == 'None' or checkPrereq(preReq, courseSet)):
-            res.append(courseNumber)
-            count += 1
-            if count == 2:
-                return
+            if (suppleUnits + unit <= 22):
+                unitCount += unit
+                suppleUnits += unit
+                res.append(courseNumber)
+                if (len(res) == 3):
+                    return unitCount
+            else:
+                buf.append((courseNumber, unit))
+                return unitCount
+    return unitCount
 
 
-def generateGenEd(dataFrame, courseSet, res):
+def generateGenEd(dataFrame, courseSet, unitCount, res, buf):
     genEdFrame = dataFrame[dataFrame['Category'] == 'General Education']
-    count = 0
+    genEdUnits = 0
     for index, row in genEdFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
+        unit = row['Unit']
         if (preReq == 'None' or checkPrereq(preReq, courseSet)):
-            res.append(courseNumber)
-            count += 1
-            if count == 2:
-                return
+            if (unitCount + unit <= 54 and genEdUnits + unit <= 21):
+                unitCount += unit
+                genEdUnits += unit
+                res.append(courseNumber)
+            else:
+                buf.append((courseNumber, unit))
+                if (len(buf) == 3):
+                    return unitCount
+    return unitCount
 
 
 dataFrame2 = readCSV("CS catalog.csv")
 dataFrame2 = dataFrame2.sort_values(['Department', 'Category', 'Course'])
-# dataFrame2 = readCSV("catalog.csv")
 majorFrame = dataFrame2[(dataFrame2['Department'] == studentMajor) & (~dataFrame2['Course'].isin(takenCourses))]
 
-# print(dataFrame2)
-# print(majorFrame)
-
-unitLimit = 54
 unitCount = 0
-finalResult = []
-generateCore(majorFrame, courseSet, finalResult)
-generateSupple(majorFrame, courseSet, finalResult)
-generateGenEd(majorFrame, courseSet, finalResult)
+coreResult = []
+coreBuffer = []
+suppleResult = []
+suppleBuffer = []
+genEdResult = []
+genEdBuffer = []
+
+unitCount = generateCore(majorFrame, courseSet, unitCount, coreResult, coreBuffer)
+unitCount = generateSupple(majorFrame, courseSet, unitCount, suppleResult, suppleBuffer)
+unitCount = generateGenEd(majorFrame, courseSet, unitCount, genEdResult, genEdBuffer)
+
+# print(unitCount)
+# print(coreResult)
+# print(coreBuffer)
+# print(suppleResult)
+# print(suppleBuffer)
+# print(genEdResult)
+# print(genEdBuffer)
+
+def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBuf):
+    coreLength = len(coreRes)
+    suppleLength = len(suppleRes)
+    genEdLength = len(genEdRes)
+    res = []
+    if (coreLength + suppleLength + genEdLength == 5):
+        res = coreRes + suppleRes + genEdRes
+        return res
+
+    
+
+    
+
+finalResult = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer)
 print(finalResult)
-
-

@@ -124,26 +124,78 @@ unitCount = generateCore(majorFrame, courseSet, unitCount, coreResult, coreBuffe
 unitCount = generateSupple(majorFrame, courseSet, unitCount, suppleResult, suppleBuffer)
 unitCount = generateGenEd(majorFrame, courseSet, unitCount, genEdResult, genEdBuffer)
 
-# print(unitCount)
-# print(coreResult)
-# print(coreBuffer)
-# print(suppleResult)
-# print(suppleBuffer)
-# print(genEdResult)
-# print(genEdBuffer)
+def extendAll(coreRes, suppleRes, genEdRes, res):
+    res.extend(coreRes)
+    res.extend(suppleRes)
+    res.extend(genEdRes)
 
-def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBuf):
+
+def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBuf, res):
     coreLength = len(coreRes)
     suppleLength = len(suppleRes)
     genEdLength = len(genEdRes)
-    res = []
-    if (coreLength + suppleLength + genEdLength == 5):
-        res = coreRes + suppleRes + genEdRes
-        return res
+    totalLength = coreLength + suppleLength + genEdLength
+    if (totalLength == 5):
+        extendAll(coreRes, suppleRes, genEdRes, res)
+        return unitCount
 
+    if (coreLength < 3):
+        for (course, unit) in coreBuf:
+            if (unitCount + unit <= 54 and totalLength < 5):
+                coreRes.append(course)
+                unitCount += unit
+                totalLength += 1
+                if (totalLength == 5):
+                    extendAll(coreRes, suppleRes, genEdRes, res)
+                    return unitCount
+                if (len(coreRes) == 3):
+                    break
+        
+        if (totalLength < 5): 
+            if (len(suppleBuf == 1)):
+                (course, unit) = suppleBuf[0]
+                if (unitCount + unit <= 54 and totalLength < 5):
+                    suppleRes.append(course)
+                    unitCount += unit
+                    totalLength += 1
+
+            if (totalLength <= 4):
+                for (course, unit) in genEdBuf:
+                    if (unitCount + unit <= 54 and totalLength < 5):
+                        genEdRes.append(course)
+                        unitCount += unit
+                        totalLength += 1
+                        if (totalLength == 5):
+                            extendAll(coreRes, suppleRes, genEdRes, res)
+                            return unitCount
+        
+        extendAll(coreRes, suppleRes, genEdRes, res)
+        return unitCount
     
+    else:
+        if (len(suppleBuf == 1)):
+            (course, unit) = suppleBuf[0]
+            if (unitCount + unit <= 54 and totalLength < 5):
+                suppleRes.append(course)
+                unitCount += unit
+                totalLength += 1
+        
+        if (totalLength <= 4):
+            for (course, unit) in genEdBuf:
+                if (unitCount + unit <= 54 and totalLength < 5):
+                    genEdRes.append(course)
+                    unitCount += unit
+                    totalLength += 1
+                    if (totalLength == 5):
+                        extendAll(coreRes, suppleRes, genEdRes, res)
+                        return unitCount
 
+        extendAll(coreRes, suppleRes, genEdRes, res)
+        return unitCount
+        
     
-
-finalResult = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer)
+finalResult = []
+unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
+print("The recommended courses for this student are:")
 print(finalResult)
+print("The total units are", unitCount)

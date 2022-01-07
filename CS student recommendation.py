@@ -28,11 +28,14 @@ courseSet = set(takenCourses)
 
 '''Display the courses this student has taken.'''
 print("The courses this student has taken are")
-for i in range(len(takenCourses)):
-    if (i != len(takenCourses) - 1):
-        print(takenCourses[i] + ", ", end = '')
-    else:
-        print("and " + takenCourses[i] + ".")
+if (len(takenCourses) == 1):
+    print(takenCourses[0])
+else:
+    for i in range(len(takenCourses)):
+        if (i != len(takenCourses) - 1):
+            print(takenCourses[i] + ", ", end = '')
+        else:
+            print("and " + takenCourses[i] + ".")
 
 def checkPrereq(preReq, courseSet):
     allConditions = preReq.split(";")
@@ -151,35 +154,14 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
                 if (len(coreRes) == 3):
                     break
         
-        if (totalLength < 5): 
-            if (len(suppleBuf == 1)):
-                (course, unit) = suppleBuf[0]
-                if (unitCount + unit <= 54 and totalLength < 5):
-                    suppleRes.append(course)
-                    unitCount += unit
-                    totalLength += 1
-
-            if (totalLength <= 4):
-                for (course, unit) in genEdBuf:
-                    if (unitCount + unit <= 54 and totalLength < 5):
-                        genEdRes.append(course)
-                        unitCount += unit
-                        totalLength += 1
-                        if (totalLength == 5):
-                            extendAll(coreRes, suppleRes, genEdRes, res)
-                            return unitCount
-        
-        extendAll(coreRes, suppleRes, genEdRes, res)
-        return unitCount
-    
-    else:
+    if (totalLength < 5): 
         if (len(suppleBuf == 1)):
             (course, unit) = suppleBuf[0]
             if (unitCount + unit <= 54 and totalLength < 5):
                 suppleRes.append(course)
                 unitCount += unit
                 totalLength += 1
-        
+
         if (totalLength <= 4):
             for (course, unit) in genEdBuf:
                 if (unitCount + unit <= 54 and totalLength < 5):
@@ -189,9 +171,9 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
                     if (totalLength == 5):
                         extendAll(coreRes, suppleRes, genEdRes, res)
                         return unitCount
-
-        extendAll(coreRes, suppleRes, genEdRes, res)
-        return unitCount
+    
+    extendAll(coreRes, suppleRes, genEdRes, res)
+    return unitCount
         
     
 finalResult = []

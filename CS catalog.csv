@@ -1,27 +1,27 @@
 ﻿Course,Unit,Department,Category,Prerequisite
 CS112,12,Computer Science,Core,None
-CS122,10,Computer Science,Core,CS112
-CS150,10,Computer Science,Core,CS151;CS112
-CS210,12,Computer Science,Core,CS122;CS150
-CS213,12,Computer Science,Core,CS122
-CS251,12,Computer Science,Core,CS122/CS150;CS151
-CS451,12,Computer Science,Core,CS210;CS251;MATH241
-CS281,12,Computer Science,Core,CS122;CS151;MATH241
-CS462,12,Computer Science,Core,CS213;MATH241;MATH259
-CS317,9,Computer Science,Core,CS150
-CS440,12,Computer Science,Core,CS213
-CS455,9,Computer Science,Core,CS251
-CS330,12,Computer Science,Core,CS213
-ML315,12,Computer Science,Core,CS122;CS151;MATH241;CS259
-HCI391,12,Computer Science,Core,CS112/CS122
-SWE214,12,Computer Science,Core,CS122;CS151
+CS122,10,Computer Science,Core,CS112:C
+CS150,10,Computer Science,Core,CS151:C;CS112:C
+CS210,12,Computer Science,Core,CS122:C;CS150:C
+CS213,12,Computer Science,Core,CS122:C
+CS251,12,Computer Science,Core,CS122:C/CS150:C;CS151:C
+CS451,12,Computer Science,Core,CS210:C;CS251:C;MATH241:C
+CS281,12,Computer Science,Core,CS122:C;CS151:C;MATH241:C
+CS462,12,Computer Science,Core,CS213:C;MATH241:C;MATH259:C
+CS317,9,Computer Science,Core,CS150:C
+CS440,12,Computer Science,Core,CS213:C
+CS455,9,Computer Science,Core,CS251:C
+CS330,12,Computer Science,Core,CS213:C
+ML315,12,Computer Science,Core,CS122:C;CS151:C;MATH241:C;CS259:C
+HCI391,12,Computer Science,Core,CS112:D/CS122:D
+SWE214,12,Computer Science,Core,CS122:C;CS151:C
 CS151,12,Computer Science,Supplementary,None
 MATH122,10,Computer Science,Supplementary,None
 MATH241,10,Computer Science,Supplementary,None
-MATH259,9,Computer Science,Supplementary,MATH122
-CS259,12,Computer Science,Supplementary,MATH259;MATH241;CS251
+MATH259,9,Computer Science,Supplementary,MATH122:D
+CS259,12,Computer Science,Supplementary,MATH259:C;MATH241:C;CS251:C
 ENG101,9,Computer Science,General Education,None
-ENG270,9,Computer Science,General Education,ENG101
+ENG270,9,Computer Science,General Education,ENG101:D
 CHEM105,10,Computer Science,General Education,None
 PHY141,12,Computer Science,General Education,None
 BIO121,9,Computer Science,General Education,None

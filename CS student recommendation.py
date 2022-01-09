@@ -24,7 +24,11 @@ courseString = infoLine.iloc[0]['Courses already taken']
 studentMajor = infoLine.iloc[0]['Major']
 takenCourses = courseString.split(";")
 takenCourses.sort()
-courseSet = set(takenCourses)
+
+courseSet = dict()
+for course in takenCourses:
+    details = course.split(":")
+    courseSet[details[0]] = details[1]
 
 '''Display the courses this student has taken.'''
 print("The courses this student has taken are")
@@ -37,12 +41,19 @@ else:
         else:
             print("and " + takenCourses[i] + ".")
 
+
+
+
+
 def checkPrereq(preReq, courseSet):
     allConditions = preReq.split(";")
     for condition in allConditions:
         flag = False
         allCourses = condition.split("/")
-        for course in allCourses:
+        for oneCourse in allCourses:
+            details = oneCourse.split(":")
+            course = details[0]
+            minGrade = details[1]
             if course in courseSet:
                 flag = True
                 break
@@ -122,16 +133,17 @@ suppleResult = []
 suppleBuffer = []
 genEdResult = []
 genEdBuffer = []
+mustTake = dict()
 
 unitCount = generateCore(majorFrame, courseSet, unitCount, coreResult, coreBuffer)
 unitCount = generateSupple(majorFrame, courseSet, unitCount, suppleResult, suppleBuffer)
 unitCount = generateGenEd(majorFrame, courseSet, unitCount, genEdResult, genEdBuffer)
 
+
 def extendAll(coreRes, suppleRes, genEdRes, res):
     res.extend(coreRes)
     res.extend(suppleRes)
     res.extend(genEdRes)
-
 
 def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBuf, res):
     coreLength = len(coreRes)
@@ -155,7 +167,7 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
                     break
         
     if (totalLength < 5): 
-        if (len(suppleBuf == 1)):
+        if (len(suppleBuf) == 1):
             (course, unit) = suppleBuf[0]
             if (unitCount + unit <= 54 and totalLength < 5):
                 suppleRes.append(course)
@@ -176,8 +188,8 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
     return unitCount
         
     
-finalResult = []
-unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
-print("The recommended courses for this student are:")
-print(finalResult)
-print("The total units are", unitCount)
+# finalResult = []
+# unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
+# print("The recommended courses for this student are:")
+# print(finalResult)
+# print("The total units are", unitCount)

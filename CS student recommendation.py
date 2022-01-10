@@ -304,7 +304,6 @@ def rebalance(dataFrame, unitCount, mustTake, coreRes, suppleRes, genEdRes):
 finalResult = []
 unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
 
-# print(mustTake)
 
 if len(mustTake) > 0:
     newDataFrame = dataFrame2[dataFrame2['Department'] == studentMajor]

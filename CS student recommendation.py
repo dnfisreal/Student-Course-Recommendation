@@ -45,31 +45,43 @@ else:
 
 
 
-def checkPrereq(preReq, courseSet):
+def checkPrereq(preReq, courseSet, mustTake):
     allConditions = preReq.split(";")
     for condition in allConditions:
-        flag = False
+        bit = 0
         allCourses = condition.split("/")
+        course = ""
+        alreadyIn = False
         for oneCourse in allCourses:
             details = oneCourse.split(":")
             course = details[0]
             minGrade = details[1]
             if course in courseSet:
-                flag = True
-                break
-        if not flag:
+                grade = courseSet[course]
+                if grade <= minGrade:
+                    bit = 1
+                    break
+                else:
+                    if (course in mustTake):
+                        alreadyIn = True
+                    bit = 2
+        if (bit == 0):
+            return False
+        elif (bit == 2):
+            if (not alreadyIn):
+                mustTake.add(course)
             return False
     return True
 
 
-def generateCore(dataFrame, courseSet, unitCount, res, buf):
+def generateCore(dataFrame, courseSet, unitCount, res, buf, mustTake):
     coreFrame = dataFrame[dataFrame['Category'] == 'Core']
     coreUnits = 0
     for index, row in coreFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
         unit = row['Unit']
-        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
+        if (preReq == 'None' or checkPrereq(preReq, courseSet, mustTake)):
             if (coreUnits + unit <= 31):
                 unitCount += unit
                 coreUnits += unit
@@ -83,14 +95,14 @@ def generateCore(dataFrame, courseSet, unitCount, res, buf):
     return unitCount
         
 
-def generateSupple(dataFrame, courseSet, unitCount, res, buf):
+def generateSupple(dataFrame, courseSet, unitCount, res, buf, mustTake):
     suppleFrame = dataFrame[dataFrame['Category'] == 'Supplementary']
     suppleUnits = 0
     for index, row in suppleFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
         unit = row['Unit']
-        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
+        if (preReq == 'None' or checkPrereq(preReq, courseSet, mustTake)):
             if (suppleUnits + unit <= 22):
                 unitCount += unit
                 suppleUnits += unit
@@ -103,14 +115,14 @@ def generateSupple(dataFrame, courseSet, unitCount, res, buf):
     return unitCount
 
 
-def generateGenEd(dataFrame, courseSet, unitCount, res, buf):
+def generateGenEd(dataFrame, courseSet, unitCount, res, buf, mustTake):
     genEdFrame = dataFrame[dataFrame['Category'] == 'General Education']
     genEdUnits = 0
     for index, row in genEdFrame.iterrows():
         preReq = row['Prerequisite']
         courseNumber = row['Course']
         unit = row['Unit']
-        if (preReq == 'None' or checkPrereq(preReq, courseSet)):
+        if (preReq == 'None' or checkPrereq(preReq, courseSet, mustTake)):
             if (unitCount + unit <= 54 and genEdUnits + unit <= 21):
                 unitCount += unit
                 genEdUnits += unit
@@ -124,7 +136,7 @@ def generateGenEd(dataFrame, courseSet, unitCount, res, buf):
 
 dataFrame2 = readCSV("CS catalog.csv")
 dataFrame2 = dataFrame2.sort_values(['Department', 'Category', 'Course'])
-majorFrame = dataFrame2[(dataFrame2['Department'] == studentMajor) & (~dataFrame2['Course'].isin(takenCourses))]
+majorFrame = dataFrame2[(dataFrame2['Department'] == studentMajor) & (~dataFrame2['Course'].isin(courseSet))]
 
 unitCount = 0
 coreResult = []
@@ -133,11 +145,11 @@ suppleResult = []
 suppleBuffer = []
 genEdResult = []
 genEdBuffer = []
-mustTake = dict()
+mustTake = set()
 
-unitCount = generateCore(majorFrame, courseSet, unitCount, coreResult, coreBuffer)
-unitCount = generateSupple(majorFrame, courseSet, unitCount, suppleResult, suppleBuffer)
-unitCount = generateGenEd(majorFrame, courseSet, unitCount, genEdResult, genEdBuffer)
+unitCount = generateCore(majorFrame, courseSet, unitCount, coreResult, coreBuffer, mustTake)
+unitCount = generateSupple(majorFrame, courseSet, unitCount, suppleResult, suppleBuffer, mustTake)
+unitCount = generateGenEd(majorFrame, courseSet, unitCount, genEdResult, genEdBuffer, mustTake)
 
 
 def extendAll(coreRes, suppleRes, genEdRes, res):
@@ -151,7 +163,6 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
     genEdLength = len(genEdRes)
     totalLength = coreLength + suppleLength + genEdLength
     if (totalLength == 5):
-        extendAll(coreRes, suppleRes, genEdRes, res)
         return unitCount
 
     if (coreLength < 3):
@@ -161,7 +172,6 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
                 unitCount += unit
                 totalLength += 1
                 if (totalLength == 5):
-                    extendAll(coreRes, suppleRes, genEdRes, res)
                     return unitCount
                 if (len(coreRes) == 3):
                     break
@@ -181,15 +191,128 @@ def balance(unitCount, coreRes, coreBuf, suppleRes, suppleBuf, genEdRes, genEdBu
                     unitCount += unit
                     totalLength += 1
                     if (totalLength == 5):
-                        extendAll(coreRes, suppleRes, genEdRes, res)
                         return unitCount
     
-    extendAll(coreRes, suppleRes, genEdRes, res)
     return unitCount
+
+def deleteFromCertain(dataFrame, unitCount, res):
+    deleteCourse = res[len(res) - 1]
+    courseLine = dataFrame[dataFrame['Course'] == deleteCourse]
+    unit = courseLine.iloc[0]['Unit']
+    unitCount -= unit
+    res.remove(deleteCourse)
+    return unitCount
+
+def deleteOneCourse(dataFrame, unitCount, firstRes, secondRes, thirdRes):
+    if (len(firstRes) != 0):
+        unitCount = deleteFromCertain(dataFrame, unitCount, firstRes)
+        return unitCount
+    
+    if (len(secondRes) != 0):
+        unitCount = deleteFromCertain(dataFrame, unitCount, secondRes)
+        return unitCount
+
+    if (len(thirdRes) != 0):
+        unitCount = deleteFromCertain(dataFrame, unitCount, thirdRes)
+        return unitCount
+
+
+def rebalance(dataFrame, unitCount, mustTake, coreRes, suppleRes, genEdRes):
+    for course in mustTake:
+        courseLine = dataFrame[dataFrame['Course'] == course]
+        category = courseLine.iloc[0]['Category']
+        currentUnit = courseLine.iloc[0]['Unit']
+        flag = False
+
+        if (unitCount + currentUnit <= 54):
+            unitCount += currentUnit
+            continue
+
+        if (category == "Core"):
+            if (len(coreRes) != 0):
+                newUnit = 0
+                for coreCourse in coreRes:
+                    newCourseLine = dataFrame[dataFrame['Course'] == coreCourse]
+                    newUnit = newCourseLine.iloc[0]['Unit']
+                    if (unitCount - newUnit + currentUnit <= 54):
+                        coreRes.remove(coreCourse)
+                        unitCount = unitCount - newUnit + currentUnit
+                        flag = True
+                        break
+                if not flag:
+                    lastCourse = coreRes[len(coreRes) - 1]
+                    coreRes.remove(lastCourse)
+                    unitCount = unitCount - newUnit + currentUnit
+                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+            else:
+                if (unitCount + currentUnit > 54):
+                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+                    if (unitCount + currentUnit > 54):
+                        unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+                unitCount += currentUnit
+                 
+        elif (category == 'Supplementary'):
+            if (len(suppleRes) != 0):
+                newUnit = 0
+                for suppleCourse in suppleRes:
+                    newCourseLine = dataFrame[dataFrame['Course'] == suppleCourse]
+                    newUnit = newCourseLine.iloc[0]['Unit']
+                    if (unitCount - newUnit + currentUnit <= 54):
+                        suppleRes.remove(suppleCourse)
+                        unitCount = unitCount - newUnit + currentUnit
+                        flag = True
+                        break
+                if not flag:
+                    lastCourse = suppleRes[len(suppleRes) - 1]
+                    suppleRes.remove(lastCourse)
+                    unitCount = unitCount - newUnit + currentUnit
+                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+            else:
+                if (unitCount + currentUnit > 54):
+                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+                    if (unitCount + currentUnit > 54):
+                        unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+                unitCount += currentUnit
+
+        else:
+            if (len(genEdRes) != 0):
+                newUnit = 0
+                for genEdCourse in genEdRes:
+                    newCourseLine = dataFrame[dataFrame['Course'] == genEdCourse]
+                    newUnit = newCourseLine.iloc[0]['Unit']
+                    if (unitCount - newUnit + currentUnit <= 54):
+                        genEdRes.remove(genEdCourse)
+                        unitCount = unitCount - newUnit + currentUnit
+                        flag = True
+                        break
+                if not flag:
+                    lastCourse = genEdRes[len(genEdRes) - 1]
+                    genEdRes.remove(lastCourse)
+                    unitCount = unitCount - newUnit + currentUnit
+                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+            else:
+                if (unitCount + currentUnit > 54):
+                    unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
+                    if (unitCount + currentUnit > 54):
+                        unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
+                unitCount += currentUnit
+    
+    return unitCount
+
         
     
-# finalResult = []
-# unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
-# print("The recommended courses for this student are:")
-# print(finalResult)
-# print("The total units are", unitCount)
+finalResult = []
+unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
+
+# print(mustTake)
+
+if len(mustTake) > 0:
+    newDataFrame = dataFrame2[dataFrame2['Department'] == studentMajor]
+    unitCount = rebalance(newDataFrame, unitCount, mustTake, coreResult, suppleResult, genEdResult)
+
+extendAll(coreResult, suppleResult, genEdResult, finalResult)
+print("The recommended courses for this student are:")
+print(finalResult)
+print("The total units are", unitCount)
+print(mustTake)
+

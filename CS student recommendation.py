@@ -12,7 +12,13 @@ dataFrame1 = readCSV("CS student.csv")
 print("Type the student's ID here and press Enter:")
 inputFlag = True
 while(inputFlag):
-    studentID = int(input())
+    '''Handle the exception when the input is not an integer'''
+    try:
+        studentID = int(input())
+    except ValueError:
+        print("The input value is not an integer! Please retype the student's ID here and press Enter:")
+        continue
+
     '''Look up the courses this student has taken.'''
     infoLine = dataFrame1[dataFrame1['ID'] == studentID]
     if (infoLine.size == 0):
@@ -30,18 +36,21 @@ for course in takenCourses:
     details = course.split(":")
     courseSet[details[0]] = details[1]
 
+def printList(L):
+    if (len(L) == 1):
+        print(L[0] + '.')
+    else:
+        for i in range(len(L)):
+            if (i != len(L) - 1):
+                print(L[i] + ", ", end = '')
+            else:
+                print("and " + L[i] + '.')
+
 '''Display the courses this student has taken.'''
-print("The courses this student has taken are")
-if (len(takenCourses) == 1):
-    print(takenCourses[0])
-else:
-    for i in range(len(takenCourses)):
-        if (i != len(takenCourses) - 1):
-            print(takenCourses[i] + ", ", end = '')
-        else:
-            print("and " + takenCourses[i] + ".")
-
-
+print()
+print("The course(s) this student has taken is/are:")
+printList(takenCourses)
+print()
 
 
 
@@ -216,6 +225,77 @@ def deleteOneCourse(dataFrame, unitCount, firstRes, secondRes, thirdRes):
         unitCount = deleteFromCertain(dataFrame, unitCount, thirdRes)
         return unitCount
 
+def dealCore(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag):
+    if (len(coreRes) != 0):
+        newUnit = 0
+        for coreCourse in coreRes:
+            newCourseLine = dataFrame[dataFrame['Course'] == coreCourse]
+            newUnit = newCourseLine.iloc[0]['Unit']
+            if (unitCount - newUnit + currentUnit <= 54):
+                coreRes.remove(coreCourse)
+                unitCount = unitCount - newUnit + currentUnit
+                flag = True
+                break
+        if not flag:
+            lastCourse = coreRes[len(coreRes) - 1]
+            coreRes.remove(lastCourse)
+            unitCount = unitCount - newUnit + currentUnit
+            unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+    else:
+        if (unitCount + currentUnit > 54):
+            unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+            if (unitCount + currentUnit > 54):
+                unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+        unitCount += currentUnit
+    return unitCount
+
+def dealSupple(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag):
+    if (len(suppleRes) != 0):
+        newUnit = 0
+        for suppleCourse in suppleRes:
+            newCourseLine = dataFrame[dataFrame['Course'] == suppleCourse]
+            newUnit = newCourseLine.iloc[0]['Unit']
+            if (unitCount - newUnit + currentUnit <= 54):
+                suppleRes.remove(suppleCourse)
+                unitCount = unitCount - newUnit + currentUnit
+                flag = True
+                break
+        if not flag:
+            lastCourse = suppleRes[len(suppleRes) - 1]
+            suppleRes.remove(lastCourse)
+            unitCount = unitCount - newUnit + currentUnit
+            unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+    else:
+        if (unitCount + currentUnit > 54):
+            unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+            if (unitCount + currentUnit > 54):
+                unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
+        unitCount += currentUnit
+    return unitCount
+
+def dealGenEd(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag):
+    if (len(genEdRes) != 0):
+        newUnit = 0
+        for genEdCourse in genEdRes:
+            newCourseLine = dataFrame[dataFrame['Course'] == genEdCourse]
+            newUnit = newCourseLine.iloc[0]['Unit']
+            if (unitCount - newUnit + currentUnit <= 54):
+                genEdRes.remove(genEdCourse)
+                unitCount = unitCount - newUnit + currentUnit
+                flag = True
+                break
+        if not flag:
+            lastCourse = genEdRes[len(genEdRes) - 1]
+            genEdRes.remove(lastCourse)
+            unitCount = unitCount - newUnit + currentUnit
+            unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
+    else:
+        if (unitCount + currentUnit > 54):
+            unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
+            if (unitCount + currentUnit > 54):
+                unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
+        unitCount += currentUnit
+    return unitCount
 
 def rebalance(dataFrame, unitCount, mustTake, coreRes, suppleRes, genEdRes):
     for course in mustTake:
@@ -229,89 +309,37 @@ def rebalance(dataFrame, unitCount, mustTake, coreRes, suppleRes, genEdRes):
             continue
 
         if (category == "Core"):
-            if (len(coreRes) != 0):
-                newUnit = 0
-                for coreCourse in coreRes:
-                    newCourseLine = dataFrame[dataFrame['Course'] == coreCourse]
-                    newUnit = newCourseLine.iloc[0]['Unit']
-                    if (unitCount - newUnit + currentUnit <= 54):
-                        coreRes.remove(coreCourse)
-                        unitCount = unitCount - newUnit + currentUnit
-                        flag = True
-                        break
-                if not flag:
-                    lastCourse = coreRes[len(coreRes) - 1]
-                    coreRes.remove(lastCourse)
-                    unitCount = unitCount - newUnit + currentUnit
-                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
-            else:
-                if (unitCount + currentUnit > 54):
-                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
-                    if (unitCount + currentUnit > 54):
-                        unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
-                unitCount += currentUnit
+            unitCount = dealCore(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag)
                  
         elif (category == 'Supplementary'):
-            if (len(suppleRes) != 0):
-                newUnit = 0
-                for suppleCourse in suppleRes:
-                    newCourseLine = dataFrame[dataFrame['Course'] == suppleCourse]
-                    newUnit = newCourseLine.iloc[0]['Unit']
-                    if (unitCount - newUnit + currentUnit <= 54):
-                        suppleRes.remove(suppleCourse)
-                        unitCount = unitCount - newUnit + currentUnit
-                        flag = True
-                        break
-                if not flag:
-                    lastCourse = suppleRes[len(suppleRes) - 1]
-                    suppleRes.remove(lastCourse)
-                    unitCount = unitCount - newUnit + currentUnit
-                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
-            else:
-                if (unitCount + currentUnit > 54):
-                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
-                    if (unitCount + currentUnit > 54):
-                        unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, coreRes, suppleRes)
-                unitCount += currentUnit
+            unitCount = dealSupple(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag)
 
         else:
-            if (len(genEdRes) != 0):
-                newUnit = 0
-                for genEdCourse in genEdRes:
-                    newCourseLine = dataFrame[dataFrame['Course'] == genEdCourse]
-                    newUnit = newCourseLine.iloc[0]['Unit']
-                    if (unitCount - newUnit + currentUnit <= 54):
-                        genEdRes.remove(genEdCourse)
-                        unitCount = unitCount - newUnit + currentUnit
-                        flag = True
-                        break
-                if not flag:
-                    lastCourse = genEdRes[len(genEdRes) - 1]
-                    genEdRes.remove(lastCourse)
-                    unitCount = unitCount - newUnit + currentUnit
-                    unitCount = deleteOneCourse(dataFrame, unitCount, genEdRes, suppleRes, coreRes)
-            else:
-                if (unitCount + currentUnit > 54):
-                    unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
-                    if (unitCount + currentUnit > 54):
-                        unitCount = deleteOneCourse(dataFrame, unitCount, suppleRes, coreRes, genEdRes)
-                unitCount += currentUnit
+            unitCount = dealGenEd(dataFrame, unitCount, coreRes, suppleRes, genEdRes, currentUnit, flag)
     
     return unitCount
 
         
-    
 finalResult = []
 unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffer, genEdResult, genEdBuffer, finalResult)
-
 
 if len(mustTake) > 0:
     newDataFrame = dataFrame2[dataFrame2['Department'] == studentMajor]
     unitCount = rebalance(newDataFrame, unitCount, mustTake, coreResult, suppleResult, genEdResult)
+    print("You must retake the following course(s) in order to satisfy prerequisites of other courses:")
+    for course in mustTake:
+        print(course + " ", end = '')
+    print()
+    print()
+    print("The rest of the recommended course(s) for this student is/are:")
+
+else:
+    print("The recommended course(s) for this student is/are:")
 
 extendAll(coreResult, suppleResult, genEdResult, finalResult)
-print("The recommended courses for this student are:")
-print(finalResult)
-print("The total units are", unitCount)
-print(mustTake)
+printList(finalResult)
+print()
+print("The total units are", str(unitCount) + ".")
+print()
+
 

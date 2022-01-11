@@ -1,5 +1,6 @@
 import pandas as pd 
 import sys
+import math
 
 '''Read in the data file and eliminate empty columns.'''
 def readCSV(fileName):
@@ -325,6 +326,7 @@ unitCount = balance(unitCount, coreResult, coreBuffer, suppleResult, suppleBuffe
 
 if len(mustTake) > 0:
     newDataFrame = dataFrame2[dataFrame2['Department'] == studentMajor]
+    countDataFrame = newDataFrame[newDataFrame['Course'].isin(courseSet)]
     unitCount = rebalance(newDataFrame, unitCount, mustTake, coreResult, suppleResult, genEdResult)
     print("You must retake the following course(s) in order to satisfy prerequisites of other courses:")
     for course in mustTake:
@@ -343,3 +345,42 @@ print("The total units are", str(unitCount) + ".")
 print()
 
 
+
+coreFrame = majorFrame[majorFrame['Category'] == 'Core'] 
+suppleFrame = majorFrame[majorFrame['Category'] == 'Supplementary'] 
+genEdFrame = majorFrame[majorFrame['Category'] == 'General Education'] 
+coreCount = len(coreFrame.index)
+suppleCount = len(suppleFrame.index)
+genEdCount = len(genEdFrame)
+totalCount = coreCount + suppleCount + genEdCount
+
+
+for course in mustTake:
+    courseLine = countDataFrame[countDataFrame['Course'] == course]
+    category = courseLine.iloc[0]['Category']
+    if (category == 'Core'):
+        coreCount += 1
+        totalCount += 1
+    elif (category == 'Supplementary'):
+        suppleCount += 1
+        totalCount += 1
+    else:
+        genEdCount += 1
+        totalCount += 1
+
+def estimate(core, supple, genEd, total):
+    totalCount = math.ceil(total / 4.5)
+    maxLimit = math.ceil(total / 4)
+    
+    coreCount = math.ceil(core / 2.5)
+    coreLeast = math.ceil(core / 3)
+    suppleCount = supple
+    genEdCount = math.ceil(genEd / 2)
+
+    finalCount = max(coreLeast, min(maxLimit, max(totalCount, coreCount, suppleCount, genEdCount)))
+    return finalCount
+
+    
+semesterCount = estimate(coreCount, suppleCount, genEdCount, totalCount)
+print("It is estimated that this student can graduate in " + str(semesterCount) + " semester(s).")
+print()

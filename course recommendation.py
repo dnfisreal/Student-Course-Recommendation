@@ -402,22 +402,27 @@ def estimate(core, supple, genEd, total):
 dataFrame1 = readCSV("students.csv")
 
 '''Read in the student's ID.'''
-print("Type the student's ID here and press Enter:")
+print("Type the student's ID here and press Enter (Type exit to quit):")
 inputFlag = True
 while(inputFlag):
     '''Handle the exception when the input is not an integer'''
     try:
-        studentID = int(input())
+        inputString = input()
+
+        if (inputString == "exit"): 
+            sys.exit()
+
+        studentID = int(inputString)
     except ValueError:
         print("The input value is not an integer! Please retype the " 
-              "student's ID here and press Enter:")
+              "student's ID here and press Enter (Type exit to quit):")
         continue
     
     '''Look up this student in the dataframe.'''
     infoLine = dataFrame1[dataFrame1['ID'] == studentID]
     if (infoLine.size == 0):
         print("The student's ID is invalid! Please retype the "
-              "student's ID here and press Enter:")
+              "student's ID here and press Enter (Type exit to quit):")
     else:
         inputFlag = False
 

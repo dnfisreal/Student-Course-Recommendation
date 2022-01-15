@@ -399,7 +399,7 @@ def estimate(core, supple, genEd, total):
 
 
 
-dataFrame1 = readCSV("CS student.csv")
+dataFrame1 = readCSV("students.csv")
 
 '''Read in the student's ID.'''
 print("Type the student's ID here and press Enter:")
@@ -444,7 +444,7 @@ print()
 
 
 '''Read in the course catalog and sort them by some order.'''
-dataFrame2 = readCSV("CS catalog.csv")
+dataFrame2 = readCSV("catalog.csv")
 dataFrame2 = dataFrame2.sort_values(['Department', 'Category', 'Course'])
 '''Extract data needed for the student's major.'''
 majorFrame = dataFrame2[(dataFrame2['Department'] == studentMajor) 
